@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require('path');
+const { Workout } = require("./models");
 
 const PORT = process.env.PORT || 3000;
 
@@ -29,18 +30,33 @@ app.get("/api/workouts", (req, res) => {
     });
 });
 
-app.put("/api/workouts")
+app.get("/api/workouts/range", (req, res) => {
+  db.Workout.find({})
+    .then(dbWorkout => {
+      res.json(dbWorkout);
+    })
+    .catch(err => {
+      res.json(err);
+    });
+});
 
+app.put("/api/workouts/:id", (req, res) => {
+  Workout.findByIdAndUpdate(req.params.id, {$push: {exercise: req.body}}, {new: true})
+.then(data => res.json(data))
+.catch(err => {
+  console.log("error", err);
+  res.json(err);
+})
+});
 
 
 app.post("/api/workouts", ({ body }, res) => {
-    db.Workout.create(body)
-      .then(({ _id }) => db.User.findOneAndUpdate({}, { $push: { workouts: _id } }, { new: true }))
-      .then(dbWorkout => {
+    Workout.create({})
+     .then(dbWorkout => {
         res.json(dbWorkout);
       })
       .catch(err => {
-        res.json(err);
+       res.status(400).json(err);
       });
   });
 
