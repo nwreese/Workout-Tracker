@@ -15,7 +15,11 @@ app.use(express.json());
 
 app.use(express.static("public"));
 
-mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/workout", { useNewUrlParser: true });
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/evening-caverns-41968", { useNewUrlParser: true,
+useUnifiedTopology: true,
+       useCreateIndex: true,
+       useFindAndModify: false
+});
 
 
 // API routes
@@ -31,7 +35,11 @@ app.get("/api/workouts", (req, res) => {
 });
 
 app.get("/api/workouts/range", (req, res) => {
-  db.Workout.find({})
+  db.Workout.find([{
+    $addFields: {
+      totalDuration: {$sum: totalDuration}
+    }
+  }])
     .then(dbWorkout => {
       res.json(dbWorkout);
     })
