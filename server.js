@@ -7,8 +7,6 @@ const { Workout } = require("./models");
 
 const PORT = process.env.PORT || 3000;
 
-const db = require("./models");
-
 const app = express();
 app.use(logger("dev"));
 
@@ -16,8 +14,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use(express.static("public"));
-                                         // not sure about this
-mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/evening-caverns-41968", 
+                                  
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/workout", 
 {  useNewUrlParser: true,
    useUnifiedTopology: true,
    useCreateIndex: true,
@@ -27,14 +25,21 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/evening-caverns
 
 // API routes
 
-app.get("/api/workouts", (req, res) => {
-  // db.Workout.aggregate([{
-    // $addFields: {
-      // totalDuration: { $sum: "$duration"}  
-    // }
-  // }])
-  db.Workout.find({})
-    .then(dbWorkout => {
+app.get("/api/workouts/range", (req, res) => {
+  Workout.aggregate([
+    {
+      $project: {
+        _id: 1,
+        day: 1,
+        exercises: 1,
+        totalDuration: {
+          $sum: "$exercises.duration"
+        }
+      }
+    }
+  ])
+.then(dbWorkout => {
+  console.log(dbWorkout)
       res.json(dbWorkout);
     })
     .catch(err => {
@@ -42,23 +47,56 @@ app.get("/api/workouts", (req, res) => {
     });
 });
 
-app.get("/api/workouts/range", (req, res) => {
-  db.Workout.aggregate([{
-    $addFields: {                                       
-      totalDuration: {$sum: totalDuration}
+app.get("/api/workouts/:id", (req, res) => {
+  Workout.findById(req.params.id)
+.then(data => res.json(data))
+.catch(err => {
+  console.log("error", err);
+  res.json(err);
+})
+});
+
+app.get("/api/workouts", (req, res) => {
+  // Workout.aggregate([
+  //   { $unwind: "$exercises" },
+  //   {
+  //     $group: {
+  //       _id: null,
+  //       totalDuration: { $sum: "$exercises.duration" }
+  //     }
+  //   }
+  // ])
+  Workout.aggregate([
+    {
+      $project: {
+        day: 1,
+        exercises: 1,
+        totalDuration: {
+          $sum: "$exercises.duration"
+        }
+      }
     }
-  }])
-    .then(dbWorkout => {
-      res.json(dbWorkout);
+  ])
+    .then((test) => {
+      console.log(test)
+      // Workout.find({}).then((dbWorkout) => {
+      //   console.log(dbWorkout)
+        res.json(test);
+
+      // })
     })
     .catch(err => {
       res.json(err);
     });
 });
+
 
 app.put("/api/workouts/:id", (req, res) => {
-  Workout.findByIdAndUpdate(req.params.id, {$push: {exercise: req.body}}, {new: true})
-.then(data => res.json(data))
+  Workout.findByIdAndUpdate(req.params.id, {$push: {exercises: req.body}}, {new: true})
+.then(data => {
+  console.log(data)
+  res.json(data)
+})
 .catch(err => {
   console.log("error", err);
   res.json(err);
