@@ -1,6 +1,8 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require('path');
+const logger = require("morgan");
+
 const { Workout } = require("./models");
 
 const PORT = process.env.PORT || 3000;
@@ -8,23 +10,29 @@ const PORT = process.env.PORT || 3000;
 const db = require("./models");
 
 const app = express();
-
+app.use(logger("dev"));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use(express.static("public"));
-
-mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/evening-caverns-41968", { useNewUrlParser: true,
-useUnifiedTopology: true,
-       useCreateIndex: true,
-       useFindAndModify: false
+                                         // not sure about this
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/evening-caverns-41968", 
+{  useNewUrlParser: true,
+   useUnifiedTopology: true,
+   useCreateIndex: true,
+   useFindAndModify: false
 });
 
 
 // API routes
 
 app.get("/api/workouts", (req, res) => {
+  // db.Workout.aggregate([{
+    // $addFields: {
+      // totalDuration: { $sum: "$duration"}  
+    // }
+  // }])
   db.Workout.find({})
     .then(dbWorkout => {
       res.json(dbWorkout);
@@ -35,8 +43,8 @@ app.get("/api/workouts", (req, res) => {
 });
 
 app.get("/api/workouts/range", (req, res) => {
-  db.Workout.find([{
-    $addFields: {
+  db.Workout.aggregate([{
+    $addFields: {                                       
       totalDuration: {$sum: totalDuration}
     }
   }])
