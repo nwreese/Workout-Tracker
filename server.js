@@ -57,16 +57,7 @@ app.get("/api/workouts/:id", (req, res) => {
 });
 
 app.get("/api/workouts", (req, res) => {
-  // Workout.aggregate([
-  //   { $unwind: "$exercises" },
-  //   {
-  //     $group: {
-  //       _id: null,
-  //       totalDuration: { $sum: "$exercises.duration" }
-  //     }
-  //   }
-  // ])
-  Workout.aggregate([
+Workout.aggregate([
     {
       $project: {
         day: 1,
@@ -79,11 +70,7 @@ app.get("/api/workouts", (req, res) => {
   ])
     .then((test) => {
       console.log(test)
-      // Workout.find({}).then((dbWorkout) => {
-      //   console.log(dbWorkout)
         res.json(test);
-
-      // })
     })
     .catch(err => {
       res.json(err);
